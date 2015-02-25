@@ -23,6 +23,8 @@ var actions = {
     if(req.url === '/'){
       url = __dirname + '/public/index.html';
       console.log(archive.paths.archivedSites);
+    } else if (req.url === '/loading') {
+      url = __dirname + '/public/loading.html';
     }
     console.log(req.url)
     fs.readFile(url,'utf-8', function(err, data){
@@ -40,7 +42,10 @@ var actions = {
         if (err) {
           return console.log(err);
         } else {
-          sendResponse(res,'302',302);
+          res.writeHead(302, {
+            'Location': '/loading'
+          });
+          res.end();
         }
       });
     });
