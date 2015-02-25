@@ -25,7 +25,9 @@ exports.initialize = function(pathsObj){
 // The following function names are provided to you to suggest how you might
 // modularize your code. Keep it clean!
 
-exports.readListOfUrls = function(){
+exports.readListOfUrls = function(fn){
+  var data = fs.readFileSync(exports.paths.list).toString().split('\n');
+  fn.call(fn, data);
 };
 
 exports.isUrlInList = function(){

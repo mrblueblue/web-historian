@@ -18,3 +18,17 @@ exports.serveAssets = function(res, asset, callback) {
 
 
 // As you progress, keep thinking about what helper functions you can put here!
+// 'GET': function(req,res){
+//   var url = archive.paths.archivedSites+req.url;
+//   if(req.url === '/'){
+//     url = __dirname + '/public/index.html';
+//     console.log(archive.paths.archivedSites);
+//   }
+//   fs.readFile(url,'utf-8', function(err, data){
+//     if(err){
+//       sendResponse(res,'404',404);
+//     } else {
+//       sendResponse(res, data ,200);
+//     }
+//   });
+// },
