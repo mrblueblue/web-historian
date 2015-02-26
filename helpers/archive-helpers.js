@@ -33,7 +33,7 @@ exports.downloadUrls = function(){
   var url = exports.popQueueContent();
   httpRequest.get(url, function(err, data) {
     var data = data.buffer.toString();
-    var uri = createURI(url);
+    var uri = exports.createURI(url);
     fs.writeFile(uri, data);
   });
 }
