@@ -26,7 +26,6 @@ var actions = {
     } else if (req.url === '/loading') {
       url = __dirname + '/public/loading.html';
     }
-    console.log(req.url)
     fs.readFile(url,'utf-8', function(err, data){
       if(err){
         sendResponse(res,'404',404);
@@ -38,16 +37,36 @@ var actions = {
   'POST': function(req, res){
     req.on('data', function(data) {
       var url = data.toString().substring(4) + "\n";
-      fs.appendFile(archive.paths.list, url, function(err) {
-        if (err) {
-          return console.log(err);
-        } else {
-          res.writeHead(302, {
-            'Location': '/loading'
-          });
-          res.end();
-        }
-      });
+      var site = data.toString().substring(4);
+      var archived = archive.createURI(site);
+
+        console.log(archived);
+        console.log(fs.readFile(archived));
+      fs.readFile(archived, function(err, data){
+          if (!err) {
+
+           fs.readFile(archived, 'utf-8', function(err, data){
+            sendResponse(res, data, 200)
+           });
+
+          }
+        else {
+
+            fs.appendFile(archive.paths.list, url, function(err) {
+              if (err) {
+                return console.log(err);
+              } else {
+                res.writeHead(302, {
+                  'Location': '/loading'
+                });
+                res.end();
+              }
+            });
+          }
+        });
+
+
+
     });
     // write request to sites.txt
     // read sites from sites.txt

@@ -1,13 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
-
-/*
- * You will need to reuse the same paths many times over in the course of this sprint.
- * Consider using the `paths` object below to store frequently used file paths. This way,
- * if you move any files, you'll only need to change your code in one place! Feel free to
- * customize it in any way you wish.
- */
+var httpRequest = require("http-request");
 
 exports.paths = {
   'siteAssets' : path.join(__dirname, '../web/public'),
@@ -15,29 +9,35 @@ exports.paths = {
   'list' : path.join(__dirname, '../archives/sites.txt')
 };
 
-// Used for stubbing paths for jasmine tests, do not modify
 exports.initialize = function(pathsObj){
   _.each(pathsObj, function(path, type) {
     exports.paths[type] = path;
   });
 };
 
-// The following function names are provided to you to suggest how you might
-// modularize your code. Keep it clean!
-
-exports.readListOfUrls = function(fn){
-  var data = fs.readFileSync(exports.paths.list).toString().split('\n');
-  fn.call(fn, data);
+exports.queueContents = function(){
+  return fs.readFileSync(exports.paths.list).toString().split('\n');
 };
 
-exports.isUrlInList = function(){
-};
+exports.popQueueContent = function(){
 
-exports.addUrlToList = function(){
-};
+  var data = exports.queueContents();
+  var url = data[0];
+  var newFile = data.slice(1);
 
-exports.isURLArchived = function(){
+  fs.writeFile(exports.paths.list, newFile.join('\n'));
+  return url;
 };
 
 exports.downloadUrls = function(){
+  var url = exports.popQueueContent();
+  httpRequest.get(url, function(err, data) {
+    var data = data.buffer.toString();
+    var uri = createURI(url);
+    fs.writeFile(uri, data);
+  });
+}
+
+exports.createURI = function(url) {
+  return exports.paths.archivedSites + '/' + url + '.html';
 };
