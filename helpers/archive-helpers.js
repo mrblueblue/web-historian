@@ -2,6 +2,9 @@ var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
 var httpRequest = require("http-request");
+var sqlite3 = require('sqlite3').verbose();
+var db = new sqlite3.Database('sites-archive-test.db');
+  db.open = true;
 
 exports.paths = {
   'siteAssets' : path.join(__dirname, '../web/public'),
@@ -15,29 +18,66 @@ exports.initialize = function(pathsObj){
   });
 };
 
-exports.queueContents = function(){
-  return fs.readFileSync(exports.paths.list).toString().split('\n');
+exports.createTable = function(){
+  db.serialize( function() {
+    db.run("CREATE TABLE archive (url VARCHAR(1000), html LONGTEXT, timestamp datetime default current_timestamp)");
+  });
+db.close();
 };
 
-exports.popQueueContent = function(){
-
-  var data = exports.queueContents();
-  var url = data[0];
-  var newFile = data.slice(1);
-
-  fs.writeFile(exports.paths.list, newFile.join('\n'));
-  return url;
+exports.insert = function(url, html){
+  db.serialize(function() {
+    db.run("INSERT INTO archive (url, html) VALUES (" +"'" + url + "'" + ", " + "'" + html +"'"+ ")");
+  });
 };
 
-exports.downloadUrls = function(){
-  var url = exports.popQueueContent();
-  httpRequest.get(url, function(err, data) {
-    var data = data.buffer.toString();
-    var uri = exports.createURI(url);
-    fs.writeFile(uri, data);
+exports.retrieve = function(url){
+  db.all("SELECT html, MIN(timestamp) FROM archive GROUP BY timestamp HAVING url = " + "'" + url +"' ", function(err, rows){
+    return rows[0].html;
+  });
+};
+
+exports.downloadUrl = function(){
+  db.serialize( function(){
+    var url;
+
+    db.all("SELECT url, min(timestamp), rowid FROM archive GROUP BY timestamp HAVING html = '' ", function(err, rows) {
+      url = rows[0].url.toString()
+      exports.id = rows[0].rowid;
+      console.log(exports.id)
+      // console.log(url)
+      httpRequest.get(url, function(err, data) {
+        // console.log(data)
+        exports.data = data.buffer.toString().length
+        // console.log(exports.data)
+      });
+    });
+
+    setTimeout(bbq, 10000);
+  function bbq() {
+  db.all("UPDATE archive SET html = '"+ exports.data + "', timestamp = current_timestamp WHERE rowid = " + exports.id + "", function(){
+    console.log(exports.data);
   });
 }
+  });
 
-exports.createURI = function(url) {
-  return exports.paths.archivedSites + '/' + url + '.html';
 };
+
+// exports.createTable();
+
+// db.run("INSERT INTO archive (url, html) VALUES ('www.hackreactor.com','')")
+    // setTimeout(scrape, 1000);
+
+
+//   })
+// };
+
+ exports.downloadUrl();
+
+  // function scrape() {
+
+// exports.test = function(){
+//   db.all("SELECT * FROM archive", function(err, table){
+//     console.log(table)
+//   })
+// }();
